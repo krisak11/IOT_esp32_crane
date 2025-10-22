@@ -24,7 +24,7 @@ const command_t commands[] = {
 	{"tell",    "/tell ID MSG or @ID MSG      Send a message to a specific node", tell_command},
 	{"ping",    "/ping ID                     Check if a node is online", ping_command},
 	{"date",    "/date                        Print the current time", date_command},
-	{"setkey",  "/setkey [KEY|0|1]            Set the encryption key to use.  If no key is provided encryption is disabled", crypt_setkey_command},
+	{"setkey",  "/setkey [0|1]                Set the encryption key to use.  If no key is provided encryption is disabled", crypt_setkey_command},
 	{"id",      "/id                          Print your ID", id_command},
 	{"testenc", "/testenc [STR]               Run STR through a encrypt/decrypt cycle to verify that encryption works", crypt_test_command},
 	{"help",    "/help                        Print this help", help_command}
