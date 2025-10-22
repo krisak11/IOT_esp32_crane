@@ -19,3 +19,5 @@ dependencies:
         git: https://iot.rhi.hi.is/git/TOL103M/command.git
     crypt:
         git: https://iot.rhi.hi.is/git/TOL103M/crypt.git
+    crane:
+        git: https://iot.rhi.hi.is/git/TOL103M/crane.git

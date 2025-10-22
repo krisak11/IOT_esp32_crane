@@ -13,6 +13,7 @@
 #include <crypt.h>
 #include <command.h>
 #include <lownet-commands.h>
+#include <crane.h>
 
 // Usage: help_command(NULL)
 // Pre:   None, this command takes no arguments.
@@ -27,6 +28,7 @@ const command_t commands[] = {
 	{"setkey",  "/setkey [0|1]                Set the encryption key to use.  If no key is provided encryption is disabled", crypt_setkey_command},
 	{"id",      "/id                          Print your ID", id_command},
 	{"testenc", "/testenc [STR]               Run STR through a encrypt/decrypt cycle to verify that encryption works", crypt_test_command},
+	{"crane",   "/crane COMMAND               /crane help for details", crane_command},
 	{"help",    "/help                        Print this help", help_command}
 };
 
@@ -68,6 +70,7 @@ void app_main(void)
 	chat_init();
 	ping_init();
 	command_init();
+	crane_init();
 
 	while (true) {
 		memset(msg_in, 0, MSG_BUFFER_LENGTH);
