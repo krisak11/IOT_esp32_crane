@@ -7,12 +7,12 @@
 #include <lownet.h>
 
 #include <serial_io.h>
-#include <utility.h>
 #include <cli.h>
 #include <chat.h>
 #include <ping.h>
 #include <crypt.h>
 #include <command.h>
+#include <lownet-commands.h>
 
 // Usage: help_command(NULL)
 // Pre:   None, this command takes no arguments.

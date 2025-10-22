@@ -1,0 +1,21 @@
+version: "4.0.0"
+description: "Skeleton for TÖL103M programming assignments"
+url: https://iot.rhi.hi.is/git/TOL103M/skeleton
+repository: https://iot.rhi.hi.is/git/TOL103M/skeleton
+dependencies:
+    lownet:
+        git: https://iot.rhi.hi.is/git/TOL103M/lownet.git
+    cli:
+        git: https://iot.rhi.hi.is/git/TOL103M/cli.git
+    lownet-commands:
+        git: https://iot.rhi.hi.is/git/TOL103M/lownet-commands.git
+    serial:
+        git: https://iot.rhi.hi.is/git/TOL103M/serial.git
+    ping:
+        git: https://iot.rhi.hi.is/git/TOL103M/ping.git
+    chat:
+        git: https://iot.rhi.hi.is/git/TOL103M/chat.git
+    command:
+        git: https://iot.rhi.hi.is/git/TOL103M/command.git
+    crypt:
+        git: https://iot.rhi.hi.is/git/TOL103M/crypt.git
