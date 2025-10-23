@@ -1,0 +1,140 @@
+dependencies:
+  chat:
+    component_hash: e91b4c52e010d6f9d67c6b46e30ffdf9bbcec55981213d5a307434f016e4c655
+    dependencies:
+    - git: https://iot.rhi.hi.is/git/TOL103M/lownet.git
+      name: lownet
+    - git: https://iot.rhi.hi.is/git/TOL103M/serial.git
+      name: serial
+    - git: https://iot.rhi.hi.is/git/TOL103M/utility.git
+      name: utility
+    source:
+      git: https://iot.rhi.hi.is/git/TOL103M/chat.git
+      path: .
+      type: git
+    version: b585dea4bf8be04ca713888aa6543d77b63ad964
+  cli:
+    component_hash: b6737f907b91899e5194699d2afaa641f9a5543fcc739b42c69e6f748a7df924
+    dependencies: []
+    source:
+      git: https://iot.rhi.hi.is/git/TOL103M/cli.git
+      path: .
+      type: git
+    version: 9e71085d5d500ec1d5d0da84164726ba43071191
+  command:
+    component_hash: 27bcee11e8c17c70461e26a85b3490fc6aab9e236aa0b9a8bc05687bcbbd6758
+    dependencies:
+    - git: https://iot.rhi.hi.is/git/TOL103M/lownet.git
+      name: lownet
+    - git: https://iot.rhi.hi.is/git/TOL103M/ping.git
+      name: ping
+    - git: https://iot.rhi.hi.is/git/TOL103M/utility.git
+      name: utility
+    source:
+      git: https://iot.rhi.hi.is/git/TOL103M/command.git
+      path: .
+      type: git
+    version: 2799e0b1286a2f298138b1ea62e2805521dcbde2
+  crane:
+    component_hash: 2967a00230a93b001c7c36573db5506ddb3cfc6a5b31408d0e359e6683465f52
+    dependencies:
+    - git: https://iot.rhi.hi.is/git/TOL103M/lownet.git
+      name: lownet
+    - git: https://iot.rhi.hi.is/git/TOL103M/serial.git
+      name: serial
+    - git: https://iot.rhi.hi.is/git/TOL103M/utility.git
+      name: utility
+    source:
+      git: https://iot.rhi.hi.is/git/TOL103M/crane.git
+      path: .
+      type: git
+    version: a848a60ce9159acf0fa0994cd4a84ab7c066fc91
+  crypt:
+    component_hash: d4ff07f9082650174372a3b4fa4480ba6a8d40627fadc3a1c7d990493820fe21
+    dependencies:
+    - git: https://iot.rhi.hi.is/git/TOL103M/lownet.git
+      name: lownet
+    - git: https://iot.rhi.hi.is/git/TOL103M/serial.git
+      name: serial
+    source:
+      git: https://iot.rhi.hi.is/git/TOL103M/crypt.git
+      path: .
+      type: git
+    version: 5b4bf77410d9ab99b420ce2222dd30b87131bf28
+  device-table:
+    component_hash: 52fd0aee84cf24558639f5b792dbb9f0ff372fbb31cf8078ccba3aaeb7a5a0e2
+    dependencies: []
+    source:
+      git: https://iot.rhi.hi.is/git/TOL103M/device-table.git
+      path: .
+      type: git
+    version: 0b1abcfcc9b1c112d12bd382577c4950340707df
+  idf:
+    source:
+      type: idf
+    version: 5.5.0
+  lownet:
+    component_hash: c876220d981c2bfe793bf4c279bd4a76b87cc5171aecfe1f27235a1634a8418d
+    dependencies:
+    - git: https://iot.rhi.hi.is/git/TOL103M/device-table.git
+      name: device-table
+    source:
+      git: https://iot.rhi.hi.is/git/TOL103M/lownet.git
+      path: .
+      type: git
+    version: 00a0a46487e913485ecef251881f8ba7420b2995
+  lownet-commands:
+    component_hash: 112fb7194f24d1f509062a71f4c6c1c9c3a90cbf6943e4c7d183b64c0f6045a1
+    dependencies:
+    - git: https://iot.rhi.hi.is/git/TOL103M/serial.git
+      name: serial
+    - git: https://iot.rhi.hi.is/git/TOL103M/lownet.git
+      name: lownet
+    source:
+      git: https://iot.rhi.hi.is/git/TOL103M/lownet-commands.git
+      path: .
+      type: git
+    version: af17cc1594beaf8cc0f2855d53a107c9d6c6dcaf
+  ping:
+    component_hash: a43497328eb223caf2231c9db141d49a3e2832aad5a63a10ecdbd5a389d88b01
+    dependencies:
+    - git: https://iot.rhi.hi.is/git/TOL103M/lownet.git
+      name: lownet
+    - git: https://iot.rhi.hi.is/git/TOL103M/serial.git
+      name: serial
+    - git: https://iot.rhi.hi.is/git/TOL103M/utility.git
+      name: utility
+    source:
+      git: https://iot.rhi.hi.is/git/TOL103M/ping.git
+      path: .
+      type: git
+    version: 9075fab27d9ade81e06eacd96e88cf1a0f92fe53
+  serial:
+    component_hash: 6393c45f660496dab990f2e60af5f2eb72c79d51f395356f1c2b2cd731d3bde9
+    dependencies: []
+    source:
+      git: https://iot.rhi.hi.is/git/TOL103M/serial.git
+      path: .
+      type: git
+    version: dd42156185ccee7faf093788b51f0e0a4324ce6f
+  utility:
+    component_hash: 1451117cc95481f1b05daac5d10cabd1eca7ea7accdc8becc18170bf6589f363
+    dependencies: []
+    source:
+      git: https://iot.rhi.hi.is/git/TOL103M/utility.git
+      path: .
+      type: git
+    version: 7cd48324eccad2d654be60f0af3c23b81ca73eef
+direct_dependencies:
+- chat
+- cli
+- command
+- crane
+- crypt
+- lownet
+- lownet-commands
+- ping
+- serial
+manifest_hash: 8d7076237f1d497ccbb60a0f63835c08d121c38507f3a0dd70a49c6ac5fbce5d
+target: esp32
+version: 2.0.0
