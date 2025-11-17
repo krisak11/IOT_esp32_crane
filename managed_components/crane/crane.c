@@ -290,31 +290,49 @@ uint16_t read_acks(void)
  */
 int crane_action(uint8_t action)
 {
-	crane_packet_t packet;
+    crane_packet_t packet;
 
-	packet.type = CRANE_ACTION;
-	packet.seq = state.seq;
-	packet.d.action.cmd = action;
+    packet.type = CRANE_ACTION;
+    packet.seq = state.seq;
+    packet.d.action.cmd = action;
+    memset(packet.d.action.reserved, 0, sizeof packet.d.action.reserved);
 
-	crane_send(state.crane, &packet);
+    // First send
+    crane_send(state.crane, &packet);
 
-	// ------------------------------------------------
-	// Milestone II, Task 1: run the following up to five times
-	// Your code goes here
-	{
-		uint16_t seq = read_acks( );	 // seq is the cumulative ack from crane, or zero if none
+    // ------------------------------------------------
+    // Milestone II, Task 1: up to five attempts
+    for (int attempt = 0; attempt < 5; ++attempt)
+        {
+            uint16_t seq = read_acks(); // cumulative ACK, or 0 if none
 
-		// If seq > state.seq, report an error and close the connection, return -2
-		// - Else if seq == state.seq, we are good, increment state.seq by one (why?!) and return 0
-		// - Otherwise retransmit
-	}
-	// ------------------------------------------------
+            if (seq > state.seq)
+                {
+                    ESP_LOGE(TAG, "Received future ACK (seq=%u > state.seq=%u), closing",
+                             seq, state.seq);
+                    crane_disconnect();
+                    return -2;
+                }
+            else if (seq == state.seq)
+                {
+                    // Our action was acknowledged
+                    state.seq++;       // next action gets next seq
+                    return 0;
+                }
 
-	// No ack received, disconnect
-	ESP_LOGI(TAG, "Received no ack from node=0x%02x", state.crane );
-	crane_disconnect();
-	return -1;
+            // seq < state.seq or 0 → no ACK for this command yet, retransmit
+            ESP_LOGW(TAG, "No valid ACK yet for seq=%u (attempt %d), retransmitting",
+                     state.seq, attempt + 1);
+            crane_send(state.crane, &packet);
+        }
+    // ------------------------------------------------
+
+    // No ack received after 5 attempts, disconnect
+    ESP_LOGI(TAG, "Received no ack from node=0x%02x", state.crane);
+    crane_disconnect();
+    return -1;
 }
+
 
 
 // ------------------------------------------------
