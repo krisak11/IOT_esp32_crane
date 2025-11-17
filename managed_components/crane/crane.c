@@ -249,20 +249,25 @@ void crane_connect(uint8_t id)
 
 void crane_disconnect(void)
 {
-	crane_packet_t packet;
+    if (state.state == ST_DISCONNECTED)
+        return;
 
-	// ------------------------------------------------
-	// Milestone I, Task 3: construct a CLOSE packet and
-	// send it to the (right) crane!
-	{
-		// your code goes here!
-	}
-	// ------------------------------------------------
-	// Then we update our state
-	state.state = ST_DISCONNECTED;
-	state.seq = 0;
+    crane_packet_t packet = {0};
+
+    packet.type  = CRANE_CLOSE;
+    packet.flags = 0;              // request close, no ACK yet
+    packet.seq   = state.seq;      // next sequence number
+    packet.d.close = 0;            // reserved
+
+    crane_send(state.crane, &packet);
+
+    // TODO (optional): wait for CLOSE+ACK and retransmit up to 3 times
+
+    // Then we update our state
+    state.state = ST_DISCONNECTED;
+    state.seq   = 0;
+    state.crane = 0;
 }
-
 
 /*
  *	Subroutine for crane_action: read ACKs from crane, blocks for some time
