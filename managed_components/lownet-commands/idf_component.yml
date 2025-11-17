@@ -1,0 +1,9 @@
+version: "1.0.0"
+description: "Commands that use lownet APIs"
+url: https://iot.rhi.hi.is/git/TOL103M/lownet-commands
+repository: https://iot.rhi.hi.is/git/TOL103M/lownet-commands
+dependencies:
+    serial:
+        git: https://iot.rhi.hi.is/git/TOL103M/serial.git
+    lownet:
+        git: https://iot.rhi.hi.is/git/TOL103M/lownet.git

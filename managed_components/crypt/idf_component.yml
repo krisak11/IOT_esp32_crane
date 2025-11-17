@@ -1,0 +1,9 @@
+version: "1.0.0"
+description: "Cryptography for lownet"
+url: https://iot.rhi.hi.is/git/TOL103M/crypt
+repository: https://iot.rhi.hi.is/git/TOL103M/crypt
+dependencies:
+    lownet:
+        git: https://iot.rhi.hi.is/git/TOL103M/lownet.git
+    serial:
+        git: https://iot.rhi.hi.is/git/TOL103M/serial.git

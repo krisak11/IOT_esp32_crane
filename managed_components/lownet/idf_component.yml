@@ -1,0 +1,7 @@
+version: "1.0.0"
+description: "Low level network layer based on ESP-NOW"
+url: https://iot.rhi.hi.is/git/TOL103M/lownet
+repository: https://iot.rhi.hi.is/git/TOL103M/lownet
+dependencies:
+    device-table:
+        git: https://iot.rhi.hi.is/git/TOL103M/device-table.git

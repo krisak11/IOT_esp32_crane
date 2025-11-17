@@ -1,0 +1,4 @@
+version: "1.0.0"
+description: "Mapping from MAC addresses to lownet IDs"
+url: https://iot.rhi.hi.is/git/TOL103M/device-table
+repository: https://iot.rhi.hi.is/git/TOL103M/device-table

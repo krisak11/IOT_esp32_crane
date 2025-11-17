@@ -1,0 +1,11 @@
+version: "1.0.0"
+description: "Lownet based ping"
+url: https://iot.rhi.hi.is/git/TOL103M/ping
+repository: https://iot.rhi.hi.is/git/TOL103M/ping
+dependencies:
+    lownet:
+        git: https://iot.rhi.hi.is/git/TOL103M/lownet.git
+    serial:
+        git: https://iot.rhi.hi.is/git/TOL103M/serial.git
+    utility:
+        git: https://iot.rhi.hi.is/git/TOL103M/utility.git

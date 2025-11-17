@@ -1,0 +1,11 @@
+version: "1.1.0"
+description: "Cryptographically secured remote commands over lownet"
+url: https://iot.rhi.hi.is/git/TOL103M/command
+repository: https://iot.rhi.hi.is/git/TOL103M/command
+dependencies:
+    lownet:
+        git: https://iot.rhi.hi.is/git/TOL103M/lownet.git
+    ping:
+        git: https://iot.rhi.hi.is/git/TOL103M/ping.git
+    utility:
+        git: https://iot.rhi.hi.is/git/TOL103M/utility.git
