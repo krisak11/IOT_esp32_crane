@@ -107,29 +107,29 @@ void crane_command(char* args)
 				{
 					// ------------------------------------------------
 					// Milestone II, Task 2: implement commands to CLI
-				case 'f':  // FORWARD
-					action = CRANE_FWD;
-					break;
+				    case 'f':  // FORWARD
+						action = CRANE_FWD;
+						break;
 
-				case 'b':  // BACK/REVERSE
-					action = CRANE_REV;
-					break;
+					case 'b':  // BACKWARD
+						action = CRANE_REV;
+						break;
 
-				case 'u':  // UP
-					action = CRANE_UP;
-					break;
+					case 'u':  // UP
+						action = CRANE_UP;
+						break;
 
-				case 'd':  // DOWN
-					action = CRANE_DOWN;
-					break;
+					case 'd':  // DOWN
+						action = CRANE_DOWN;
+						break;
 
-				case 'o':  // light on
-					action = CRANE_LIGHT_ON;
-					break;
+					case 'o':  // light on
+						action = CRANE_LIGHT_ON;
+						break;
 
-				case 'O':  // light off
-					action = CRANE_LIGHT_OFF;
-					break;
+					case 'O':  // light off
+						action = CRANE_LIGHT_OFF;
+						break;
 				// ------------------------------------------------
 				default:
 					ESP_LOGI(TAG, "Invalid crane command");
@@ -148,17 +148,32 @@ void crane_recv_connect(const crane_packet_t* packet)
 	ESP_LOGI(TAG, "packet flags: %02x", packet->flags);
 
 	// ------------------------------------------------
-	// Milestone I: check that both SYN and ACK flags are set?
-	// - if not, return
+	// Milestone I: Check SYN and ACK flags/bits are both set (SYN-ACK) - if not, abort handshake.
+    if (((packet->flags & CRANE_SYN) == 0) ||
+        ((packet->flags & CRANE_ACK) == 0))
+    {
+        ESP_LOGW(TAG, "CONNECT packet without SYN|ACK, aborting handshake");
+        return;
+    }
 
 	// Milestone I: respond with appropriate (ack) packet + challenge! (cf. Task 2)
-	crane_packet_t outpkt;
-	{
-		// your code goes here!
-	}
-	crane_send(state.crane, &outpkt);
-	// ------------------------------------------------
+	// Build final ACK with inverted challenge ("proof of work")
+	crane_packet_t outpkt = {0};
+	outpkt.type  = CRANE_CONNECT;
+	outpkt.flags = CRANE_ACK;           // add CRANE_TEST here if doing test mode
+	outpkt.seq   = 0;      				// handshake uses seq = 0
+
+	// flip all bits of the challenge
+    outpkt.d.conn.challenge = ~packet->d.conn.challenge;
+
+    crane_send(state.crane, &outpkt);
+
+    // handshake complete
+    state.state = ST_CONNECTED;
+    // After handshake, actions start at seq = 1; crane_connect() already did ++seq
+    ESP_LOGI(TAG, "Handshake completed, connection established");
 }
+	// ------------------------------------------------
 
 void crane_recv_close(const crane_packet_t* packet)
 {
