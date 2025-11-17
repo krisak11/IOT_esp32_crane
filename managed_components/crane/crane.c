@@ -232,20 +232,25 @@ void crane_receive(const lownet_frame_t* frame)
  */
 void crane_connect(uint8_t id)
 {
-	if (state.state != ST_DISCONNECTED)
-		return;
+    if (state.state != ST_DISCONNECTED)
+        return;
 
-	crane_packet_t packet;
-	packet.type = CRANE_CONNECT;
-	packet.flags = CRANE_SYN;
-	packet.seq = state.seq;
+    crane_packet_t packet = {0};      // zero-initialize everything
 
-	state.crane = id;
-	state.state = ST_HANDSHAKE;
-	++state.seq;
+    packet.type  = CRANE_CONNECT;
+    packet.flags = CRANE_SYN;         // just SYN for normal open
+    packet.seq   = 0;                 // handshake always uses seq = 0
+    packet.d.conn.challenge = 0;      // MUST be 0 in the initial request
 
-	crane_send(id, &packet);
+    // Internal state
+    state.crane = id;
+    state.state = ST_HANDSHAKE;
+    ++state.seq;                  
+
+    ESP_LOGI(TAG, "Sending CONNECT (SYN) to 0x%02x", id);
+    crane_send(id, &packet);
 }
+
 
 void crane_disconnect(void)
 {
