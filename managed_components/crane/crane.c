@@ -48,6 +48,8 @@ int crane_init(void)
 	state.crane = 0;
 	state.state = ST_DISCONNECTED;
 	state.acks = xQueueCreate(8, sizeof(uint16_t));
+	ESP_LOGI(TAG, "Crane protocol initialized");
+
 	return 0;
 }
 
@@ -185,26 +187,28 @@ void crane_recv_close(const crane_packet_t* packet)
 
 void crane_recv_status(const crane_packet_t* packet)
 {
-	char buffer[200];
+    char buffer[200];
 
-	if ( packet->flags & CRANE_NAK )	// crane missed some packet
-		{
-			// Not in use yet -- anywhere, so you can ignore
-			ESP_LOGI(TAG, "Received status packet with NAK -- not in use yet" );
-			return;
-		}
-	else // push the cumulative ack to ACK-queue
-		xQueueSend( state.acks, &packet->seq, 0 );
+    ESP_LOGI(TAG, "STATUS: seq=%u flags=0x%02x", packet->seq, packet->flags);
 
-	snprintf(buffer, sizeof buffer,
-					 "backlog: %d\n"
-					 "time: %d\n"
-					 "light: %s\n",
-					 packet->d.status.backlog,
-					 packet->d.status.time_left,
-					 packet->d.status.light ? "on" : "off");
-	serial_write_line(buffer);
+    if (packet->flags & CRANE_NAK)
+        {
+            ESP_LOGI(TAG, "Received status packet with NAK -- not in use yet");
+            return;
+        }
+    else
+        xQueueSend(state.acks, &packet->seq, 0);
+
+    snprintf(buffer, sizeof buffer,
+             "backlog: %d\n"
+             "time: %d\n"
+             "light: %s\n",
+             packet->d.status.backlog,
+             packet->d.status.time_left,
+             packet->d.status.light ? "on" : "off");
+    serial_write_line(buffer);
 }
+
 
 void crane_receive(const lownet_frame_t* frame)
 {
@@ -245,7 +249,7 @@ void crane_connect(uint8_t id)
     // Internal state
     state.crane = id;
     state.state = ST_HANDSHAKE;
-    ++state.seq;                  
+    state.seq = 1;           // Commands must be numbered using the seq-field starting with 1 after connection establishment.       
 
     ESP_LOGI(TAG, "Sending CONNECT (SYN) to 0x%02x", id);
     crane_send(id, &packet);
@@ -254,8 +258,11 @@ void crane_connect(uint8_t id)
 
 void crane_disconnect(void)
 {
-    if (state.state == ST_DISCONNECTED)
+    if (state.state == ST_DISCONNECTED){
+		ESP_LOGI(TAG, "state already disconnected");
         return;
+	}
+		
 
     crane_packet_t packet = {0};
 
@@ -264,6 +271,7 @@ void crane_disconnect(void)
     packet.seq   = state.seq;      // next sequence number
     packet.d.close = 0;            // reserved
 
+	ESP_LOGI(TAG, "sending CRANE_ClOSE to 0x%02x", state.crane);
     crane_send(state.crane, &packet);
 
     // TODO (optional): wait for CLOSE+ACK and retransmit up to 3 times
@@ -272,6 +280,7 @@ void crane_disconnect(void)
     state.state = ST_DISCONNECTED;
     state.seq   = 0;
     state.crane = 0;
+
 }
 
 /*
@@ -282,11 +291,17 @@ uint16_t read_acks(void)
 	uint16_t seq, x;
 
 	// Wait for an ack up to 5 seconds
-	if ( xQueueReceive(state.acks, &seq, 5000/portTICK_PERIOD_MS) != pdTRUE )
+	if ( xQueueReceive(state.acks, &seq, 10000/portTICK_PERIOD_MS) != pdTRUE ){
+		ESP_LOGW(TAG, "No ACK received within timeout, seq set to 0. state.acks value is %p", state.acks);
 		seq = 0;
+	}
+		
 	// read any other acks if in the queue
-	while ( xQueueReceive(state.acks, &x, 0) == pdTRUE )
+	while ( xQueueReceive(state.acks, &x, 0) == pdTRUE ){
 		seq = seq >= x ? seq : x;
+		ESP_LOGI(TAG, "Drained ACK from queue, seq now %u", seq);
+	}
+		
 	return seq;
 }
 
@@ -295,21 +310,24 @@ uint16_t read_acks(void)
  */
 int crane_action(uint8_t action)
 {
-    crane_packet_t packet;
+    crane_packet_t packet = {0};      // <-- important
 
-    packet.type = CRANE_ACTION;
-    packet.seq = state.seq;
+    packet.type  = CRANE_ACTION;
+    packet.flags = 0;                 // normal action: no SYN/ACK/NAK/TEST
+    packet.seq   = state.seq;
     packet.d.action.cmd = action;
-    memset(packet.d.action.reserved, 0, sizeof packet.d.action.reserved);
+    // reserved already zeroed by = {0}
 
     // First send
     crane_send(state.crane, &packet);
-
+	uint16_t seq = read_acks();
+	ESP_LOGI(TAG, "read_acks: got seq=%u, state.seq=%u", seq, state.seq);
     // ------------------------------------------------
     // Milestone II, Task 1: up to five attempts
     for (int attempt = 0; attempt < 5; ++attempt)
         {
             uint16_t seq = read_acks(); // cumulative ACK, or 0 if none
+            ESP_LOGI(TAG, "read_acks: got seq=%u, state.seq=%u", seq, state.seq);
 
             if (seq > state.seq)
                 {
@@ -326,17 +344,17 @@ int crane_action(uint8_t action)
                 }
 
             // seq < state.seq or 0 → no ACK for this command yet, retransmit
-            ESP_LOGW(TAG, "No valid ACK yet for seq=%u (attempt %d), retransmitting",
+            ESP_LOGW(TAG, "No valid ACK yet for state.seq=%u (attempt %d), retransmitting",
                      state.seq, attempt + 1);
             crane_send(state.crane, &packet);
         }
     // ------------------------------------------------
 
-    // No ack received after 5 attempts, disconnect
-    ESP_LOGI(TAG, "Received no ack from node=0x%02x", state.crane);
+    ESP_LOGI(TAG, "Received no ack from node=0x%02x disconnecting from crane.", state.crane);
     crane_disconnect();
     return -1;
 }
+
 
 
 
@@ -364,6 +382,16 @@ void crane_send(uint8_t id, const crane_packet_t* packet)
 	frame.protocol = CRANE_PROTO;
 	frame.length = sizeof *packet;
 	memcpy(frame.payload, packet, sizeof *packet);
+	// Debug: print out critical fields
+    ESP_LOGI(TAG,
+             "crane_send: dst=0x%02x proto=0x%02x len=%d | "
+             "type=%u flags=0x%02x seq=%u",
+             frame.destination,
+             frame.protocol,
+             frame.length,
+             packet->type,
+             packet->flags,
+             packet->seq);
 
 	lownet_send(&frame);
 }
