@@ -395,6 +395,37 @@ int crane_action(uint8_t action)
 void crane_test(uint8_t id)
 {
 }
+
+/**
+ * Helper method for crane_test(): wait until crane is idle (backlog=0) or timeout occurs.
+ */
+static int crane_wait_until_idle(uint32_t timeout_ms)
+{
+    TickType_t start = xTaskGetTickCount();
+    TickType_t deadline = start + pdMS_TO_TICKS(timeout_ms);
+
+    ESP_LOGI(TAG, "Waiting for crane to become idle (backlog=0)");
+
+    while (state.state == ST_CONNECTED)
+        {
+            if (state.backlog == 0)
+                {
+                    ESP_LOGI(TAG, "Crane is idle (backlog=0)");
+                    return 0;
+                }
+
+            if (xTaskGetTickCount() > deadline)
+                {
+                    ESP_LOGW(TAG, "Timeout while waiting for crane to become idle");
+                    break;
+                }
+
+            vTaskDelay(pdMS_TO_TICKS(100)); // sleep 100 ms
+        }
+
+    return -1;
+}
+
 // ------------------------------------------------
 
 
