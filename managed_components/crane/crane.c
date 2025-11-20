@@ -30,7 +30,7 @@ static struct
 {
 	uint16_t seq; // next sequence number to use
 	uint8_t crane; 
-	uint8_t  backlog; // latest backlog from STATUS
+	uint8_t  backlog; // Remember backlog so crane_test() can wait until all commands executed
 	QueueHandle_t acks;
 	enum
 		{
@@ -169,7 +169,9 @@ void crane_recv_connect(const crane_packet_t* packet)
 	// Build final ACK with inverted challenge ("proof of work")
 	crane_packet_t outpkt = {0};
 	outpkt.type  = CRANE_CONNECT;
-	outpkt.flags = CRANE_ACK;           // add CRANE_TEST here if doing test mode
+	outpkt.flags = CRANE_ACK;           
+	if (packet->flags & CRANE_TEST)		// if TEST flag set in SYN-ACK
+        outpkt.flags |= CRANE_TEST;    // keep TEST in the final ACK if present
 	outpkt.seq   = 0;      				// handshake uses seq = 0
 
 	// flip all bits of the challenge
@@ -197,6 +199,9 @@ void crane_recv_status(const crane_packet_t* packet)
     char buffer[200];
 
     ESP_LOGI(TAG, "STATUS: seq=%u flags=0x%02x", packet->seq, packet->flags);
+
+	// Remember backlog so crane_test() can wait until all commands executed
+    state.backlog = packet->d.status.backlog;
 
     if (packet->flags & CRANE_NAK)
         {
@@ -328,8 +333,6 @@ int crane_action(uint8_t action)
 
     // First send
     crane_send(state.crane, &packet);
-	uint16_t seq = read_acks();
-	ESP_LOGI(TAG, "read_acks: got seq=%u, state.seq=%u", seq, state.seq);
     // ------------------------------------------------
     // Milestone II, Task 1: up to five attempts
     for (int attempt = 0; attempt < 5; ++attempt)
