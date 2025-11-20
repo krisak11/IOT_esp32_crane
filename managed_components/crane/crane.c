@@ -11,6 +11,9 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/queue.h>
 
+#include <stdbool.h>
+
+
 #define CRANE_PROTO 0x05
 
 #define TAG "crane"
@@ -25,8 +28,9 @@ void crane_send(uint8_t destination, const crane_packet_t* packet);
 // state of a single flow
 static struct
 {
-	uint16_t seq;
-	uint8_t crane;
+	uint16_t seq; // next sequence number to use
+	uint8_t crane; 
+	uint8_t  backlog; // latest backlog from STATUS
 	QueueHandle_t acks;
 	enum
 		{
@@ -34,6 +38,7 @@ static struct
 			ST_HANDSHAKE,
 			ST_CONNECTED,
 		} state;
+	bool test_mode; // whether in test mode or normal mode
 } state;
 
 int crane_init(void)
@@ -46,7 +51,9 @@ int crane_init(void)
 
 	state.seq = 0;
 	state.crane = 0;
+	state.backlog = 0; // keep track of backlog
 	state.state = ST_DISCONNECTED;
+	state.test_mode = false; // not in test mode by default
 	state.acks = xQueueCreate(8, sizeof(uint16_t));
 	ESP_LOGI(TAG, "Crane protocol initialized");
 
@@ -203,7 +210,7 @@ void crane_recv_status(const crane_packet_t* packet)
              "backlog: %d\n"
              "time: %d\n"
              "light: %s\n",
-             packet->d.status.backlog,
+             packet->d.status.backlog, // 
              packet->d.status.time_left,
              packet->d.status.light ? "on" : "off");
     serial_write_line(buffer);
@@ -291,7 +298,7 @@ uint16_t read_acks(void)
 	uint16_t seq, x;
 
 	// Wait for an ack up to 5 seconds
-	if ( xQueueReceive(state.acks, &seq, 10000/portTICK_PERIOD_MS) != pdTRUE ){
+	if ( xQueueReceive(state.acks, &seq, 5000/portTICK_PERIOD_MS) != pdTRUE ){
 		ESP_LOGW(TAG, "No ACK received within timeout, seq set to 0. state.acks value is %p", state.acks);
 		seq = 0;
 	}
@@ -299,9 +306,9 @@ uint16_t read_acks(void)
 	// read any other acks if in the queue
 	while ( xQueueReceive(state.acks, &x, 0) == pdTRUE ){
 		seq = seq >= x ? seq : x;
-		ESP_LOGI(TAG, "Drained ACK from queue, seq now %u", seq);
+		ESP_LOGW(TAG, "Drained ACK from queue, seq now %u", seq);
 	}
-		
+	ESP_LOGW(TAG, "Returning seq=%u from read_acks", seq);
 	return seq;
 }
 
@@ -314,8 +321,9 @@ int crane_action(uint8_t action)
 
     packet.type  = CRANE_ACTION;
     packet.flags = 0;                 // normal action: no SYN/ACK/NAK/TEST
-    packet.seq   = state.seq;
-    packet.d.action.cmd = action;
+    packet.seq   = state.seq; 		// current sequence number
+    ESP_LOGW(TAG, "crane_action: sending action %u with seq=%u", action, packet.seq);
+	packet.d.action.cmd = action;
     // reserved already zeroed by = {0}
 
     // First send
@@ -363,7 +371,19 @@ int crane_action(uint8_t action)
 // Milestone III: run the test pattern
 //
 // 1. establish connection with TEST flag
-// 2. run the test pattern according to the specs
+// 2. run the test pattern according to the specs:
+//		Resend command(s) accordingly if no reception ACK is received within 1-2 seconds.
+// 		2.1. Establish a connection to crane
+// 		2.2. Switch on the light
+// 		2.3. Drive crane forward for two steps
+// 		2.4. Drive crane backward for one step
+// 		2.5. Pause until all commands have executed. Wait for an ACK that confirms completion of all commands
+// 		2.6. Lower the hook for two steps
+// 		2.7. Pause until all commands have executed. Wait for an ACK that confirms completion of all commands
+// 		2.8. Lift the hook back up for two steps
+// 		2.9. Drive crane backwards for one step
+// 		2.10. Switch of the light
+// 		2.11. Disconnect by sending the CLOSE command
 // 3. close the connection
 //
 // Hint: you can work it all out here slowly, or be a wizard
